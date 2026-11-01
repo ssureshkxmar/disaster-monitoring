@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DISASTER WATCH | Early Warning & Environmental Monitoring System</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            command: {
+              950: '#070b13',
+              900: '#0c1220',
+              850: '#10192d',
+              800: '#15223c',
+              700: '#1f3054',
+              600: '#2b4273'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet.js CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-[#070b13] text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebarMobileBackdrop" class="fixed inset-0 bg-black/70 z-40 lg:hidden hidden backdrop-blur-sm" onclick="toggleSidebarMobile()"></div>
+
+  <!-- APPLICATION WRAPPER -->
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- ========================================== -->
+    <!-- 1. LEFT SIDEBAR NAVIGATION                 -->
+    <!-- ========================================== -->
+    <aside id="mainSidebar" class="fixed lg:static top-0 bottom-0 left-0 z-50 w-64 bg-[#0a101d] border-r border-slate-800/80 flex flex-col transition-all duration-300 transform -translate-x-full lg:translate-x-0 shadow-2xl">
+      
+      <!-- Brand & System Identity -->
+      <div class="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 bg-[#080d18]">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-9 h-9 rounded bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-950/40 border border-cyan-400/30">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-white"></i>
+          </div>
+          <div class="leading-tight truncate" id="brandSubtext">
+            <div class="font-extrabold text-sm tracking-wider text-white">DISASTER WATCH</div>
+            <div class="text-[9px] font-mono tracking-widest text-cyan-400 font-semibold uppercase">EARLY WARNING & MONITORING</div>
+          </div>
+        </div>
+        <button id="sidebarToggleBtn" class="hidden lg:flex p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 transition" title="Toggle Sidebar">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Station Telemetry Meta Badge -->
+      <div class="p-3 border-b border-slate-800/60 bg-[#0c1424]/40">
+        <div class="flex items-center justify-between text-[11px] font-mono">
+          <span class="text-slate-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            NODE ALPHA-07
+          </span>
+          <span class="px-1.5 py-0.5 rounded text-[9px] bg-slate-800 text-sky-400 font-bold border border-slate-700">ESP8266</span>
+        </div>
+        <div class="text-[10px] text-slate-500 font-mono mt-1 truncate">Wayanad Sector 4B Catchment</div>
+      </div>
+
+      <!-- Navigation Items List (All 12 from requirements) -->
+      <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+        
+        <a href="#overview" data-view="overview" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 bg-blue-600/20 text-sky-400 border-sky-500 font-semibold">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">System Overview</span>
+        </a>
+
+        <a href="#live-monitoring" data-view="live" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="activity" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Live Monitoring</span>
+          <span class="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        </a>
+
+        <a href="#weather" data-view="weather" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="cloud-sun" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Weather Conditions</span>
+        </a>
+
+        <a href="#rainfall" data-view="rainfall" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="cloud-rain" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Rainfall Monitoring</span>
+        </a>
+
+        <a href="#soil-moisture" data-view="soil" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="sprout" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Soil Moisture Analysis</span>
+        </a>
+
+        <a href="#water-level" data-view="water" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="waves" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Water Level Monitoring</span>
+        </a>
+
+        <a href="#vibration" data-view="vibration" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="zap" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Vibration Monitoring</span>
+        </a>
+
+        <a href="#temperature-humidity" data-view="temp-humidity" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="thermometer" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Temperature & Humidity</span>
+        </a>
+
+        <div class="pt-2 pb-1 px-3">
+          <div class="text-[9px] font-mono uppercase tracking-widest text-slate-500 font-bold">OPERATIONS</div>
+        </div>
+
+        <a href="#early-warning" data-view="early-warning" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400"></i>
+          <span class="nav-label">Early Warning Center</span>
+          <span id="earlyWarningBadgeCount" class="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">2 ACTIVE</span>
+        </a>
+
+        <a href="#alerts" data-view="alerts" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="bell" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Alert History</span>
+        </a>
+
+        <a href="#analytics" data-view="analytics" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">Analytics & Reports</span>
+        </a>
+
+        <a href="#configuration" data-view="config" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded text-xs transition border-l-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40">
+          <i data-lucide="sliders" class="w-4 h-4 shrink-0"></i>
+          <span class="nav-label">System Configuration</span>
+        </a>
+
+      </nav>
+
+      <!-- Sidebar Footer / Hardware Status Badge -->
+      <div class="p-3 border-t border-slate-800/80 bg-[#080d18] text-[10px] font-mono text-slate-400 space-y-1">
+        <div class="flex items-center justify-between">
+          <span>ESP Core: v3.1.2</span>
+          <span class="text-emerald-400">ONLINE</span>
+        </div>
+        <div class="flex items-center justify-between text-slate-500">
+          <span>Mem Heap:</span>
+          <span>28.4 KB Free</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN CONTENT AREA & TOP HEADER          -->
+    <!-- ========================================== -->
+    <div id="mainContentArea" class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+      <!-- TOP COMMAND HEADER -->
+      <header class="sticky top-0 z-30 h-16 bg-[#0a101d]/90 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-6 flex items-center justify-between">
+        
+        <!-- Left: Mobile menu toggle & Breadcrumbs -->
+        <div class="flex items-center gap-3">
+          <button id="mobileMenuBtn" class="lg:hidden p-2 rounded text-slate-400 hover:text-white hover:bg-slate-800">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+
+          <div>
+            <div class="flex items-center gap-2 text-xs font-mono">
+              <span class="text-slate-500">ECC-04</span>
+              <span class="text-slate-600">/</span>
+              <span class="text-slate-400">Station Alpha-07</span>
+              <span class="text-slate-600">/</span>
+              <span id="currentViewBreadcrumb" class="text-cyan-400 font-semibold uppercase">System Overview</span>
+            </div>
+            <div class="text-[11px] text-slate-400 hidden sm:block">
+              Western Ghats Sector 4B — River Drainage Sub-Basin
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Telemetry status, Time, Threat Switcher, Audio, Profile -->
+        <div class="flex items-center gap-3 md:gap-4">
+          
+          <!-- System Status: ONLINE & ThingSpeak Cloud Link -->
+          <div id="thingspeakCloudBadge" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold tracking-wider">
+            <span class="pulse-beacon bg-emerald-400 text-emerald-400"></span>
+            <span>THINGSPEAK: ONLINE</span>
+            <span class="text-[10px] text-slate-400 font-normal hidden xl:inline">(Channel 3561421)</span>
+          </div>
+
+          <!-- Live Streaming Toggle -->
+          <button onclick="window.thingSpeakClient ? window.thingSpeakClient.toggleLivePolling() : window.telemetryEngine.toggleStreaming()" id="liveStreamingBadge" class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer transition">
+            <span class="pulse-beacon bg-emerald-400 text-emerald-400"></span>
+            <span class="text-xs font-mono font-bold tracking-wider text-emerald-400">THINGSPEAK: STREAMING</span>
+          </button>
+
+          <!-- Quick Test Packet Button -->
+          <button onclick="window.thingSpeakClient && window.thingSpeakClient.sendTestPacket()" class="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-600/20 text-sky-400 border border-sky-500/40 hover:bg-blue-600/30 transition text-xs font-mono font-semibold" title="Post sample test packet to ThingSpeak Channel 3561421">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Send Test Packet</span>
+          </button>
+
+          <!-- Current Date & Time -->
+          <div id="headerDateTime" class="hidden xl:block text-xs font-mono text-right">
+            <span class="text-slate-400">31-Oct-2026</span>
+            <span class="text-white font-bold ml-1.5">21:28:40 IST</span>
+          </div>
+
+          <!-- Last Sync Counter -->
+          <div class="hidden md:flex flex-col text-right text-[10px] font-mono">
+            <span class="text-slate-500 uppercase tracking-wider">Last Sync</span>
+            <span id="headerSyncTimer" class="text-cyan-400 font-bold">2s ago</span>
+          </div>
+
+          <!-- Interactive Siren / Audio Toggle -->
+          <button onclick="window.telemetryEngine.toggleAudio()" id="audioToggleBtn" class="p-2 rounded bg-slate-900 border border-slate-800 text-cyan-400 hover:bg-slate-800 transition" title="Toggle Alert Siren Audio">
+            <i id="audioToggleIcon" data-lucide="volume-2" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Notification Bell with Popover -->
+          <div class="relative">
+            <button onclick="toggleNotificationsPopover()" class="p-2 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition relative" title="Alert Notifications">
+              <i data-lucide="bell" class="w-4 h-4"></i>
+              <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
+            </button>
+
+            <!-- Notifications Popover Menu -->
+            <div id="notificationsPopover" class="hidden absolute right-0 mt-2 w-80 bg-[#0f172a] border border-slate-700/80 rounded-md shadow-2xl z-50 p-3 space-y-2">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-white uppercase tracking-wider">Active System Alerts</span>
+                <span class="text-[10px] font-mono text-cyan-400 font-bold">2 PENDING</span>
+              </div>
+              <div class="space-y-1.5 text-xs">
+                <div class="p-2 rounded bg-orange-950/30 border border-orange-500/40 text-orange-200">
+                  <div class="font-bold text-[11px] text-orange-400 flex justify-between">
+                    <span>WATER SENSOR SURGE</span>
+                    <span class="font-mono text-[9px]">21:20 IST</span>
+                  </div>
+                  <div class="text-[11px] text-slate-300 mt-0.5">Analog reading 495/1023 crossed Watch threshold.</div>
+                </div>
+                <div class="p-2 rounded bg-yellow-950/30 border border-yellow-500/40 text-yellow-200">
+                  <div class="font-bold text-[11px] text-yellow-400 flex justify-between">
+                    <span>SOIL WET THRESHOLD</span>
+                    <span class="font-mono text-[9px]">20:52 IST</span>
+                  </div>
+                  <div class="text-[11px] text-slate-300 mt-0.5">Capacitive probe Pin D6 tripped HIGH.</div>
+                </div>
+              </div>
+              <button onclick="acknowledgeActiveAlerts()" class="w-full mt-2 py-1.5 text-center text-[11px] font-mono font-bold bg-slate-800 hover:bg-slate-700 text-white rounded border border-slate-700 transition">
+                Acknowledge All Alerts
+              </button>
+            </div>
+          </div>
+
+          <!-- User Profile / Shift Commander -->
+          <div class="flex items-center gap-2 pl-2 border-l border-slate-800">
+            <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400 font-mono font-bold text-xs">
+              ECC
+            </div>
+            <div class="hidden 2xl:block text-left text-xs leading-tight">
+              <div class="font-bold text-slate-200">Capt. S. Ramanathan</div>
+              <div class="text-[10px] text-slate-400 font-mono">Shift Commander</div>
+            </div>
+          </div>
+
+        </div>
+
+      </header>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW: SYSTEM OVERVIEW (Default Main Command Centre Dashboard)              -->
+      <!-- ========================================================================= -->
+      <main id="view-overview" class="dashboard-view p-4 md:p-6 space-y-6 flex-1">
+        
+        <!-- SECTION 4A: EMERGENCY STATUS BANNER -->
+        <section id="emergencyStatusBanner" class="panel p-4 md:p-5 corner-bracket transition-all duration-300">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            
+            <!-- Left: Current Threat Level & Risk Score -->
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <span class="text-[11px] font-mono tracking-widest text-slate-400 uppercase font-semibold">CURRENT THREAT LEVEL:</span>
+                <span id="threatLevelBadge" class="px-3 py-1 rounded text-xs font-mono font-bold tracking-widest uppercase border text-blue-400 bg-blue-500/10 border-blue-500/30">
+                  CONNECTING...
+                </span>
+                <span class="text-xs font-mono text-slate-500 hidden sm:inline">|</span>
+                <span class="text-xs font-mono text-slate-400 hidden sm:inline">
+                  Updated: <span id="threatLastUpdated" class="text-slate-200 font-bold">Connecting to Cloud...</span>
+                </span>
+              </div>
+
+              <!-- Risk Assessment Narrative -->
+              <p id="threatAssessmentText" class="text-xs md:text-sm text-slate-300 max-w-4xl leading-relaxed">
+                Connecting to ThingSpeak Cloud Channel 3561421... Fetching real hardware sensor telemetry.
+              </p>
+
+              <!-- Mandatory Prototype Indicator Disclaimer -->
+              <div class="flex items-center gap-2 pt-1 text-[11px] text-cyan-400/90 font-mono">
+                <i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i>
+                <span>100% Real hardware data from ESP8266 NodeMCU / ESP32. Prototype monitoring indicator.</span>
+              </div>
+            </div>
+
+            <!-- Right: Environmental Risk Score Gauge & Simulator Selector -->
+            <div class="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
+              
+              <!-- Risk Score Meter -->
+              <div class="p-3 bg-[#0a1120] rounded border border-slate-800 w-full sm:w-60">
+                <div class="flex items-center justify-between text-xs mb-1.5 font-mono">
+                  <span class="text-slate-400 uppercase tracking-wider text-[10px]">Environmental Risk Score</span>
+                  <span id="riskScoreValue" class="text-cyan-400 font-bold text-base">-- / 100</span>
+                </div>
+                <div class="analog-meter-track">
+                  <div id="riskScoreBar" class="analog-meter-fill bg-cyan-500" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Quick Threat Level Simulator Buttons -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[10px] font-mono text-slate-500 uppercase mr-1">Simulate Level:</span>
+                <button onclick="window.telemetryEngine.applyThreatLevel('NORMAL')" class="threat-level-btn px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-900 transition" data-level="NORMAL">NORMAL</button>
+                <button onclick="window.telemetryEngine.applyThreatLevel('ADVISORY')" class="threat-level-btn px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-yellow-950 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-900 transition" data-level="ADVISORY">ADVISORY</button>
+                <button onclick="window.telemetryEngine.applyThreatLevel('WATCH')" class="threat-level-btn px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-orange-950 text-orange-400 border border-orange-500/50 ring-2 ring-white hover:bg-orange-900 transition" data-level="WATCH">WATCH</button>
+                <button onclick="window.telemetryEngine.applyThreatLevel('WARNING')" class="threat-level-btn px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950 text-red-400 border border-red-500/50 hover:bg-red-900 transition" data-level="WARNING">WARNING</button>
+                <button onclick="window.telemetryEngine.applyThreatLevel('CRITICAL')" class="threat-level-btn px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950 text-red-300 border border-red-600 hover:bg-red-900 transition" data-level="CRITICAL">CRITICAL</button>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        <!-- SECTION 4B: FIVE LIVE SENSOR MONITORING CARDS -->
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+
+          <!-- 1. WATER SENSOR (Analog 0-1023) -->
+          <div class="panel p-4 flex flex-col justify-between corner-bracket">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <i data-lucide="waves" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Water Sensor</h3>
+                    <div class="text-[9px] font-mono text-slate-400">PIN A0 • ANALOG PROBE</div>
+                  </div>
+                </div>
+                <span class="state-pill bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px]">ONLINE</span>
+              </div>
+
+              <!-- Main Reading & Meter -->
+              <div class="space-y-2">
+                <div class="flex items-baseline justify-between">
+                  <div>
+                    <span id="valWaterSensor" class="text-2xl font-mono font-extrabold text-cyan-400">--</span>
+                    <span class="text-xs font-mono text-slate-400 ml-1">/ 1023</span>
+                  </div>
+                  <span id="statusWaterSensor" class="text-xs font-mono font-semibold tracking-wide text-cyan-400">Syncing...</span>
+                </div>
+
+                <!-- Analog meter bar with threshold zones -->
+                <div>
+                  <div class="analog-meter-track">
+                    <div id="barWaterSensor" class="analog-meter-fill bg-cyan-400" style="width: 0%;"></div>
+                  </div>
+                  <div class="flex justify-between text-[8px] font-mono text-slate-500 mt-1">
+                    <span>0 (Dry)</span>
+                    <span class="text-yellow-500">250</span>
+                    <span class="text-orange-500">500</span>
+                    <span class="text-red-500">750 (Inundation)</span>
+                    <span>1023</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Sparkline & Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-800/60">
+              <div class="h-10 w-full mb-2">
+                <canvas id="waterSparkline"></canvas>
+              </div>
+              <div class="flex items-center justify-between text-[9px] font-mono text-slate-400">
+                <span>Range: 0-1023 ADC</span>
+                <span>Synced: <span id="tsWaterSensor" class="text-slate-300">--</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. RAIN SENSOR (Digital Wet/Dry Only) -->
+          <div class="panel p-4 flex flex-col justify-between corner-bracket">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <i data-lucide="cloud-rain" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Rain Sensor</h3>
+                    <div class="text-[9px] font-mono text-slate-400">PIN D7 • DIGITAL COMPARATOR</div>
+                  </div>
+                </div>
+                <span class="state-pill bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px]">ONLINE</span>
+              </div>
+
+              <!-- Main Reading: Digital State -->
+              <div class="space-y-2">
+                <div id="statusRainSensor" class="text-lg font-mono font-extrabold flex items-center">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-600 mr-2"></span>
+                  <span class="text-slate-400">Syncing...</span>
+                </div>
+
+                <div class="p-2 rounded bg-[#0a1120] border border-slate-800 space-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Digital Logic:</span>
+                    <span id="pinRainSensor" class="text-slate-300 font-bold">PIN D7 (DO)</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Precip Rate:</span>
+                    <span id="rateRainSensor" class="text-slate-400 text-[10px]">Not measured</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Sparkline & Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-800/60">
+              <div class="h-10 w-full mb-2">
+                <canvas id="rainSparkline"></canvas>
+              </div>
+              <div class="flex items-center justify-between text-[9px] font-mono text-slate-400">
+                <span>Timeline: Discrete 0/1</span>
+                <span>Synced: <span id="tsRainSensor" class="text-slate-300">--</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. SOIL MOISTURE SENSOR (Digital Wet/Dry Only) -->
+          <div class="panel p-4 flex flex-col justify-between corner-bracket">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <i data-lucide="sprout" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Soil Moisture</h3>
+                    <div class="text-[9px] font-mono text-slate-400">PIN D6 • DIGITAL PROBE</div>
+                  </div>
+                </div>
+                <span class="state-pill bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px]">ONLINE</span>
+              </div>
+
+              <!-- Main Reading: Digital Threshold State -->
+              <div class="space-y-2">
+                <div id="statusSoilSensor" class="text-lg font-mono font-extrabold flex items-center">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-600 mr-2"></span>
+                  <span class="text-slate-400">Syncing...</span>
+                </div>
+
+                <div class="p-2 rounded bg-[#0a1120] border border-slate-800 space-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Digital Pin:</span>
+                    <span id="pinSoilSensor" class="text-slate-300 font-bold">PIN D6 (DO)</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Volumetric %:</span>
+                    <span id="pctSoilSensor" class="text-slate-400 text-[10px]">Not measured</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Sparkline & Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-800/60">
+              <div class="h-10 w-full mb-2">
+                <canvas id="soilSparkline"></canvas>
+              </div>
+              <div class="flex items-center justify-between text-[9px] font-mono text-slate-400">
+                <span>Threshold: Digital Trip</span>
+                <span>Synced: <span id="tsSoilSensor" class="text-slate-300">--</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. VIBRATION SENSOR (SW-420) -->
+          <div class="panel p-4 flex flex-col justify-between corner-bracket">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Vibration Sensor</h3>
+                    <div class="text-[9px] font-mono text-slate-400">PIN D5 • SW-420 INTERRUPT</div>
+                  </div>
+                </div>
+                <span class="state-pill bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px]">ONLINE</span>
+              </div>
+
+              <!-- Main Reading: Vibration Activity -->
+              <div class="space-y-2">
+                <div id="statusVibrationSensor" class="text-sm font-mono font-bold flex items-center">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-slate-600 mr-2"></span>
+                  <span class="text-slate-400">Syncing...</span>
+                </div>
+
+                <div class="p-2 rounded bg-[#0a1120] border border-slate-800 space-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Activity Rate:</span>
+                    <span id="countVibrationSensor" class="text-slate-400 font-bold">--</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Digital Pin:</span>
+                    <span id="pinVibrationSensor" class="text-slate-300 text-[10px]">PIN D5 (DO)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Sparkline & Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-800/60">
+              <div class="h-10 w-full mb-2">
+                <canvas id="vibrationSparkline"></canvas>
+              </div>
+              <div class="flex items-center justify-between text-[9px] font-mono text-slate-400">
+                <span>Frequency: Pulses/min</span>
+                <span>Synced: <span id="tsVibrationSensor" class="text-slate-300">--</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. TEMPERATURE & HUMIDITY (DHT22) -->
+          <div class="panel p-4 flex flex-col justify-between corner-bracket">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                    <i data-lucide="thermometer" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white">Temp & Humidity</h3>
+                    <div class="text-[9px] font-mono text-slate-400">PIN D2 • DHT22 1-WIRE</div>
+                  </div>
+                </div>
+                <span class="state-pill bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px]">ONLINE</span>
+              </div>
+
+              <!-- Main Reading: Dual Temp & Humidity Values -->
+              <div class="space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="p-2 rounded bg-[#0a1120] border border-slate-800">
+                    <div class="text-[10px] font-mono text-slate-500 uppercase">Ambient Temp</div>
+                    <div id="valTempSensor" class="text-xl font-mono font-extrabold text-pink-400">--</div>
+                  </div>
+                  <div class="p-2 rounded bg-[#0a1120] border border-slate-800">
+                    <div class="text-[10px] font-mono text-slate-500 uppercase">Relative Hum</div>
+                    <div id="valHumSensor" class="text-xl font-mono font-extrabold text-sky-400">--</div>
+                  </div>
+                </div>
+
+                <div class="flex justify-between font-mono text-[10px] px-1 text-slate-400">
+                  <span>Dew Point: <span id="valDewPoint" class="text-slate-300">--</span></span>
+                  <span>Heat Index: <span id="valHeatIndex" class="text-slate-300">--</span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Sparkline & Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-800/60">
+              <div class="h-10 w-full mb-2">
+                <canvas id="tempSparkline"></canvas>
+              </div>
+              <div class="flex items-center justify-between text-[9px] font-mono text-slate-400">
+                <span>Dual Stream (°C / %RH)</span>
+                <span>Synced: <span id="tsDhtSensor" class="text-slate-300">--</span></span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- SECTION 5: ADVANCED DATA VISUALIZATION SECTION -->
+        <section class="panel p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <i data-lucide="line-chart" class="w-4 h-4 text-cyan-400"></i>
+                Advanced Telemetry Visualization & Analytics
+              </h2>
+              <div class="text-xs text-slate-400">
+                Continuous edge-calibrated multi-parameter time series for Station Alpha-07
+              </div>
+            </div>
+
+            <!-- Time Filter Controls (1h, 6h, 24h, 7d) -->
+            <div class="flex items-center gap-1.5 p-1 rounded bg-[#0a1120] border border-slate-800 font-mono text-xs">
+              <button onclick="setChartTimeFilter('1h')" data-range="1h" class="time-filter-btn px-2.5 py-1 rounded font-bold bg-blue-600 text-white border border-blue-500 transition">1 Hour</button>
+              <button onclick="setChartTimeFilter('6h')" data-range="6h" class="time-filter-btn px-2.5 py-1 rounded font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">6 Hours</button>
+              <button onclick="setChartTimeFilter('24h')" data-range="24h" class="time-filter-btn px-2.5 py-1 rounded font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">24 Hours</button>
+              <button onclick="setChartTimeFilter('7d')" data-range="7d" class="time-filter-btn px-2.5 py-1 rounded font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">7 Days</button>
+            </div>
+          </div>
+
+          <!-- 6 High-Density Analytics Charts Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            
+            <!-- 1. Water Analog History (0-1023) -->
+            <div class="p-3.5 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-cyan-400 uppercase">Water Level History (ADC 0-1023)</span>
+                <span class="text-[10px] font-mono text-slate-500">Thresholds: 500 & 750</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="chartWaterHistory"></canvas>
+              </div>
+            </div>
+
+            <!-- 2. Temperature History (°C) -->
+            <div class="p-3.5 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-pink-400 uppercase">Temperature History (°C)</span>
+                <span class="text-[10px] font-mono text-slate-500">DHT22 Ambient</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="chartTempHistory"></canvas>
+              </div>
+            </div>
+
+            <!-- 3. Humidity History (% RH) -->
+            <div class="p-3.5 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-sky-400 uppercase">Relative Humidity History (% RH)</span>
+                <span class="text-[10px] font-mono text-slate-500">Saturation Limit: 100%</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="chartHumidityHistory"></canvas>
+              </div>
+            </div>
+
+            <!-- 4. Rain Detection Timeline (Digital Discrete) -->
+            <div class="p-3.5 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-blue-400 uppercase">Rain Detection Event Timeline</span>
+                <span class="text-[10px] font-mono text-slate-500">Digital 0/1 State</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="chartRainTimeline"></canvas>
+              </div>
+            </div>
+
+            <!-- 5. Soil Wet/Dry History (Digital Discrete) -->
+            <div class="p-3.5 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-emerald-400 uppercase">Soil Wet / Dry History</span>
+                <span class="text-[10px] font-mono text-slate-500">Digital Threshold Trip</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="chartSoilTimeline"></canvas>
+              </div>
+            </div>
+
+            <!-- 6. Vibration Event Frequency Chart (Histogram) -->
+            <div class="p-3.5 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-amber-400 uppercase">Vibration Event Frequency</span>
+                <span class="text-[10px] font-mono text-slate-500">SW-420 Trigger Pulses</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="chartVibrationFrequency"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- SECTION 6 & 7: EARLY WARNING CENTER & GEOGRAPHIC MONITORING SECTION -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+          <!-- SECTION 6: EARLY WARNING AND RISK ANALYSIS (Left 5 Cols) -->
+          <div class="xl:col-span-5 panel p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h2 class="text-sm font-bold uppercase tracking-wider text-white">Early Warning Center</h2>
+                  <div class="text-[10px] font-mono text-slate-400">Multi-Threat Rule Engine & Event Timeline</div>
+                </div>
+              </div>
+              <button onclick="acknowledgeActiveAlerts()" class="px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                Acknowledge All
+              </button>
+            </div>
+
+            <!-- Threat Assessment Status Header -->
+            <div class="p-3 rounded bg-[#0a1120] border border-slate-800 space-y-2">
+              <div id="ewThreatAssessmentHeader" class="text-xs font-mono font-bold text-orange-400 tracking-wider">
+                SYSTEM THREAT STATE: WATCH
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                <div class="p-2 rounded bg-slate-900/60 border border-slate-800">
+                  <div class="text-[10px] text-slate-500">Flash Flood Risk</div>
+                  <div class="text-orange-400 font-bold mt-0.5">MODERATE (Elevated)</div>
+                </div>
+                <div class="p-2 rounded bg-slate-900/60 border border-slate-800">
+                  <div class="text-[10px] text-slate-500">Slope Instability</div>
+                  <div class="text-amber-400 font-bold mt-0.5">MARGINAL (Soil Saturated)</div>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-400 italic">
+                * Note: Prototype monitoring indicator, not a validated disaster prediction.
+              </div>
+            </div>
+
+            <!-- Active Sensor Threshold Rules List -->
+            <div class="space-y-2">
+              <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+                Automated Threshold Logic Rules
+              </div>
+
+              <!-- Rule 1: Flash Flood -->
+              <div class="p-2.5 rounded bg-orange-950/20 border border-orange-500/30 text-xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-orange-300 font-mono text-[11px]">RULE-FF-01: Flash Flood Runoff</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40">TRIGGERED</span>
+                </div>
+                <div class="text-[11px] text-slate-300">Water Analog &gt; 500 AND Rain Sensor == LOW (Rain detected)</div>
+                <div class="text-[10px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-orange-500/20">
+                  <span>Current: Water 495 / Rain 1 (Wet)</span>
+                  <span class="text-orange-400">Watch state activated</span>
+                </div>
+              </div>
+
+              <!-- Rule 2: Slope Failure -->
+              <div class="p-2.5 rounded bg-slate-900 border border-slate-800 text-xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-200 font-mono text-[11px]">RULE-LS-02: Slope Slip Precursor</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700">ARMED</span>
+                </div>
+                <div class="text-[11px] text-slate-300">Soil Moisture == WET AND SW-420 &gt; 15 pulses/min</div>
+                <div class="text-[10px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
+                  <span>Current: Soil WET / Vib 6/min</span>
+                  <span class="text-amber-400">Monitoring slope shear</span>
+                </div>
+              </div>
+
+              <!-- Rule 3: Extreme Debris Surge -->
+              <div class="p-2.5 rounded bg-slate-900 border border-slate-800 text-xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-200 font-mono text-[11px]">RULE-DF-03: Debris Surge Alarm</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
+                </div>
+                <div class="text-[11px] text-slate-300">Water Analog &gt; 850 AND Vibration &gt; 35 pulses/min</div>
+                <div class="text-[10px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
+                  <span>Current: Parameters within bounds</span>
+                  <span class="text-emerald-400">Clear</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Dispatch Simulation Button -->
+            <div class="pt-2">
+              <button onclick="openModal('protocolModal')" class="w-full py-2 px-3 rounded bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 transition">
+                <i data-lucide="radio" class="w-4 h-4"></i>
+                DISPATCH EVACUATION / ADVISORY PROTOCOL
+              </button>
+            </div>
+
+          </div>
+
+          <!-- SECTION 7: GEOGRAPHIC MONITORING SECTION (Right 7 Cols) -->
+          <div class="xl:col-span-7 panel p-5 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h2 class="text-sm font-bold uppercase tracking-wider text-white">Geographic Monitoring & Mesh Coverage</h2>
+                  <div class="text-[10px] font-mono text-slate-400">Tactical Satellite Sector 4B • Topographic Catchment Overlay</div>
+                </div>
+              </div>
+
+              <!-- Map Legend Badges -->
+              <div class="flex items-center gap-2 text-[10px] font-mono flex-wrap">
+                <span class="flex items-center gap-1 text-cyan-400"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Primary Hub</span>
+                <span class="flex items-center gap-1 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Flood Corridor</span>
+                <span class="flex items-center gap-1 text-red-400"><span class="w-2 h-2 rounded-full bg-red-500"></span> Slope Hazard</span>
+              </div>
+            </div>
+
+            <!-- Leaflet Map Container -->
+            <div class="relative w-full h-[360px] rounded border border-slate-800 overflow-hidden">
+              <div id="tacticalMap" class="w-full h-full"></div>
+            </div>
+
+            <!-- Station Alpha-07 Geographic Telemetry Panel -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
+              <div class="p-2 rounded bg-[#0a1120] border border-slate-800">
+                <div class="text-[9px] text-slate-500 uppercase">Station GPS</div>
+                <div class="text-slate-200 font-bold mt-0.5">11.6054° N, 76.0822° E</div>
+              </div>
+              <div class="p-2 rounded bg-[#0a1120] border border-slate-800">
+                <div class="text-[9px] text-slate-500 uppercase">Altitude</div>
+                <div class="text-slate-200 font-bold mt-0.5">742 m ASL</div>
+              </div>
+              <div class="p-2 rounded bg-[#0a1120] border border-slate-800">
+                <div class="text-[9px] text-slate-500 uppercase">Ground Slope</div>
+                <div class="text-slate-200 font-bold mt-0.5">28.5° NW Incline</div>
+              </div>
+              <div class="p-2 rounded bg-[#0a1120] border border-slate-800">
+                <div class="text-[9px] text-slate-500 uppercase">Hydrological Basin</div>
+                <div class="text-cyan-400 font-bold mt-0.5 truncate">Chaliyar Sub-4B</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- SECTION 8: SYSTEM HEALTH & HARDWARE TELEMETRY PANEL -->
+        <section class="panel p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <div class="p-1.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-white">System Health & ESP8266 NodeMCU Telemetry</h2>
+                <div class="text-[10px] font-mono text-slate-400">Microcontroller diagnostics, RF link quality, and GPIO sensor bus allocation</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-mono">
+              <span class="text-slate-500">NodeMCU ESP8266-12F</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            </div>
+          </div>
+
+          <!-- Hardware KPI Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 font-mono text-xs">
+            
+            <div class="p-3 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="text-[10px] text-slate-500 uppercase">MCU Connection</div>
+              <div class="text-emerald-400 font-bold text-sm mt-1 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                ONLINE
+              </div>
+              <div class="text-[10px] text-slate-400 mt-1 truncate">Tensilica L106 @ 80MHz</div>
+            </div>
+
+            <div class="p-3 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="text-[10px] text-slate-500 uppercase">Wi-Fi Link (RSSI)</div>
+              <div class="text-emerald-400 font-bold text-sm mt-1 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                -64 dBm (92%)
+              </div>
+              <div class="text-[10px] text-slate-400 mt-1 truncate">SSID: DISASTER_MESH</div>
+            </div>
+
+            <div class="p-3 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="text-[10px] text-slate-500 uppercase">IP & MAC Address</div>
+              <div class="text-slate-200 font-bold text-xs mt-1">192.168.1.188</div>
+              <div class="text-[10px] text-slate-400 mt-1">A4:CF:12:8E:91:30</div>
+            </div>
+
+            <div class="p-3 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="text-[10px] text-slate-500 uppercase">Free Heap RAM</div>
+              <div class="text-cyan-400 font-bold text-sm mt-1">28,440 B</div>
+              <div class="text-[10px] text-slate-400 mt-1">59.2% Available</div>
+            </div>
+
+            <div class="p-3 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="text-[10px] text-slate-500 uppercase">MQTT Telemetry Link</div>
+              <div class="text-emerald-400 font-bold text-sm mt-1">TLS 1.3 / 8883</div>
+              <div class="text-[10px] text-slate-400 mt-1">Ping Roundtrip: 38ms</div>
+            </div>
+
+            <div class="p-3 rounded bg-[#0b1325] border border-slate-800/80">
+              <div class="text-[10px] text-slate-500 uppercase">System Uptime</div>
+              <div id="systemUptimeText" class="text-slate-200 font-bold text-xs mt-1">18d 14h 32m 44s</div>
+              <div class="text-[10px] text-slate-400 mt-1">Zero Watchdog Trips</div>
+            </div>
+
+          </div>
+
+          <!-- Sensor Pin Availability Matrix -->
+          <div class="border border-slate-800/80 rounded overflow-x-auto">
+            <table class="tactical-table">
+              <thead>
+                <tr>
+                  <th>ESP Pin</th>
+                  <th>GPIO / Bus</th>
+                  <th>Connected Sensor</th>
+                  <th>Interface Signal Type</th>
+                  <th>Sample Interval</th>
+                  <th>Availability</th>
+                </tr>
+              </thead>
+              <tbody id="hardwarePinsTbody">
+                <!-- Dynamically populated by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SECTION 9: RECENT EVENTS DATA TABLE -->
+        <section class="panel p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <i data-lucide="database" class="w-4 h-4 text-cyan-400"></i>
+                Recent Telemetry Events & Audit Log
+              </h2>
+              <div class="text-xs text-slate-400">
+                Timestamped hardware interrupts, threshold triggers, and calibration events
+              </div>
+            </div>
+
+            <!-- Search, Filters, and Export -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Search Input -->
+              <div class="relative">
+                <input id="eventSearchInput" type="text" placeholder="Search events..." class="bg-[#0b1325] border border-slate-800 text-xs text-white rounded px-3 py-1.5 pl-8 focus:outline-none focus:border-cyan-500 font-mono w-44 md:w-56">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5"></i>
+              </div>
+
+              <!-- Severity Filter -->
+              <select id="eventSeverityFilter" class="bg-[#0b1325] border border-slate-800 text-xs text-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 font-mono">
+                <option value="ALL">All Severities</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="WARNING">Warning</option>
+                <option value="WATCH">Watch</option>
+                <option value="ADVISORY">Advisory</option>
+                <option value="NORMAL">Normal</option>
+              </select>
+
+              <!-- Sensor Filter -->
+              <select id="eventSensorFilter" class="bg-[#0b1325] border border-slate-800 text-xs text-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 font-mono">
+                <option value="ALL">All Sensors</option>
+                <option value="Water">Water Sensor</option>
+                <option value="Rain">Rain Sensor</option>
+                <option value="Soil">Soil Moisture</option>
+                <option value="Vibration">Vibration SW-420</option>
+                <option value="DHT22">DHT22 Temp/RH</option>
+                <option value="System">System / WiFi</option>
+              </select>
+
+              <!-- Export CSV Button -->
+              <button onclick="exportEventsCSV()" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition" title="Export CSV Data">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span class="hidden md:inline">Export CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="border border-slate-800/80 rounded overflow-x-auto">
+            <table class="tactical-table">
+              <thead>
+                <tr>
+                  <th>Event ID</th>
+                  <th>Sensor Source</th>
+                  <th>Event Description</th>
+                  <th>Severity</th>
+                  <th>Timestamp</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentEventsTbody">
+                <!-- Dynamically populated by app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Footer Count -->
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400 pt-1">
+            <span id="eventsCountBadge">10 records logged</span>
+            <span>Real-time Ring Buffer Capacity: 256 Events</span>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: LIVE MONITORING (Oscilloscope & Raw ADC View)             -->
+      <!-- ========================================================================= -->
+      <section id="view-live" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i>
+                High-Frequency Real-Time Telemetry Stream
+              </h2>
+              <div class="text-xs text-slate-400">Low-latency ESP8266 ADC sampling & digital interrupt line monitors</div>
+            </div>
+            <div class="flex items-center gap-2 font-mono text-xs">
+              <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">500ms POLING</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Raw Water Analog Visualizer -->
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800 space-y-3">
+              <div class="flex justify-between items-center text-xs font-mono">
+                <span class="text-cyan-400 font-bold">ANALOG PIN A0 (WATER PROBE)</span>
+                <span class="text-slate-400">10-Bit Successive Approximation ADC</span>
+              </div>
+              <div class="h-32 flex items-center justify-center bg-black/40 rounded border border-slate-900 font-mono text-center p-4">
+                <div>
+                  <div class="text-4xl font-extrabold text-cyan-400 font-mono tracking-wider">0x01EF (495)</div>
+                  <div class="text-xs text-slate-400 mt-1">Voltage: ~1.59 V (Reference 3.3V)</div>
+                </div>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">
+                ADC Sample Frequency: 2 Hz • Linear Resistance Conversion Active
+              </div>
+            </div>
+
+            <!-- Vibration Digital Interrupt Visualizer -->
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800 space-y-3">
+              <div class="flex justify-between items-center text-xs font-mono">
+                <span class="text-amber-400 font-bold">DIGITAL PIN D5 (SW-420 VIBRATION)</span>
+                <span class="text-slate-400">Hardware GPIO Interrupt</span>
+              </div>
+              <div class="h-32 flex items-center justify-center bg-black/40 rounded border border-slate-900 font-mono text-center p-4">
+                <div>
+                  <div class="text-3xl font-extrabold text-amber-400 font-mono">INTERRUPT ACTIVE</div>
+                  <div class="text-xs text-slate-400 mt-1">Burst Rate: 6 pulses / window</div>
+                </div>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">
+                Debounce Threshold: 25ms • Sensitivity Potentiometer: Calibrated 65%
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: WEATHER CONDITIONS                                        -->
+      <!-- ========================================================================= -->
+      <section id="view-weather" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="cloud-sun" class="w-5 h-5 text-sky-400"></i>
+              Local Catchment Microclimate & Weather Observations
+            </h2>
+            <div class="text-xs text-slate-400">Derived from local DHT22 surface node & regional meteorology station link</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 font-mono">
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800">
+              <div class="text-xs text-slate-500">Surface Temperature</div>
+              <div class="text-2xl font-bold text-pink-400 mt-1">23.2 °C</div>
+              <div class="text-[10px] text-slate-400 mt-1">Lapse rate: -0.6°C/100m</div>
+            </div>
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800">
+              <div class="text-xs text-slate-500">Relative Humidity</div>
+              <div class="text-2xl font-bold text-sky-400 mt-1">89.0 %</div>
+              <div class="text-[10px] text-slate-400 mt-1">Condensation risk high</div>
+            </div>
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800">
+              <div class="text-xs text-slate-500">Dew Point</div>
+              <div class="text-2xl font-bold text-emerald-400 mt-1">21.3 °C</div>
+              <div class="text-[10px] text-slate-400 mt-1">T-Td Spread: 1.9 °C</div>
+            </div>
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800">
+              <div class="text-xs text-slate-500">Barometric Estimate</div>
+              <div class="text-2xl font-bold text-cyan-400 mt-1">934 hPa</div>
+              <div class="text-[10px] text-slate-400 mt-1">Altitude adjusted (742m)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: RAINFALL MONITORING                                       -->
+      <!-- ========================================================================= -->
+      <section id="view-rainfall" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="cloud-rain" class="w-5 h-5 text-blue-400"></i>
+              Rainfall Detection & Surface Wetness Diagnostics
+            </h2>
+            <div class="text-xs text-slate-400">Hardware specification: FC-37 Rain sensor conductive nickel plate with LM393 comparator</div>
+          </div>
+
+          <div class="p-4 rounded bg-blue-950/20 border border-blue-500/30 text-xs space-y-2">
+            <div class="text-blue-300 font-bold font-mono">SENSOR SPECIFICATION COMPLIANCE NOTICE:</div>
+            <p class="text-slate-300 leading-relaxed">
+              The connected FC-37 hardware provides binary conductive wet/dry trigger logic via Pin D2. Volumetric rainfall accumulation (mm/hr) is <strong>Not measured</strong> by this digital switch module. Surface precipitation detection is actively monitored for flash flood risk correlation.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+            <div class="p-3 bg-[#0a1120] border border-slate-800 rounded">
+              <span class="text-slate-500">Current Pin State</span>
+              <div class="text-lg font-bold text-blue-400 mt-1">GPIO 4 (D2) = LOW</div>
+              <span class="text-[10px] text-slate-400">Conductive path bridged</span>
+            </div>
+            <div class="p-3 bg-[#0a1120] border border-slate-800 rounded">
+              <span class="text-slate-500">Event Start Time</span>
+              <div class="text-lg font-bold text-slate-200 mt-1">20:34:40 IST</div>
+              <span class="text-[10px] text-slate-400">Continuous 54 mins</span>
+            </div>
+            <div class="p-3 bg-[#0a1120] border border-slate-800 rounded">
+              <span class="text-slate-500">Analog Acc. Rate</span>
+              <div class="text-lg font-bold text-slate-400 mt-1">Not measured</div>
+              <span class="text-[10px] text-slate-500">Digital Sensor Only</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: SOIL MOISTURE ANALYSIS                                    -->
+      <!-- ========================================================================= -->
+      <section id="view-soil" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="sprout" class="w-5 h-5 text-emerald-400"></i>
+              Subsurface Soil Moisture & Slope Liquefaction Analysis
+            </h2>
+            <div class="text-xs text-slate-400">Digital threshold probe deployed at 40cm root zone depth on 28.5° slope</div>
+          </div>
+
+          <div class="p-4 rounded bg-emerald-950/20 border border-emerald-500/30 text-xs space-y-2">
+            <div class="text-emerald-300 font-bold font-mono">SOIL SENSOR DIAGNOSTIC:</div>
+            <p class="text-slate-300 leading-relaxed">
+              Hardware utilizes high-impedance comparator module. Pin D6 reports <strong>WET</strong> threshold state. Volumetric moisture percentage is <strong>Not measured</strong>. Ground pore pressure is monitored to provide early warning of slope shear failure.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: WATER LEVEL MONITORING                                    -->
+      <!-- ========================================================================= -->
+      <section id="view-water" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="waves" class="w-5 h-5 text-cyan-400"></i>
+              Water Level Hydrograph & Inundation Monitoring
+            </h2>
+            <div class="text-xs text-slate-400">Continuous analog immersion resistive ladder in main drainage culvert</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+            <div class="p-3 bg-[#0a1120] border border-slate-800 rounded">
+              <span class="text-slate-500">Current Analog Reading</span>
+              <div class="text-2xl font-bold text-cyan-400 mt-1">495 / 1023</div>
+              <span class="text-[10px] text-orange-400">Rising +15 counts/10m</span>
+            </div>
+            <div class="p-3 bg-[#0a1120] border border-slate-800 rounded">
+              <span class="text-slate-500">Culvert Stage Assessment</span>
+              <div class="text-lg font-bold text-slate-200 mt-1">Moderate Runoff</div>
+              <span class="text-[10px] text-slate-400">55 counts below Warning</span>
+            </div>
+            <div class="p-3 bg-[#0a1120] border border-slate-800 rounded">
+              <span class="text-slate-500">Critical Submersion Level</span>
+              <div class="text-lg font-bold text-red-400 mt-1">750 ADC Trigger</div>
+              <span class="text-[10px] text-slate-400">Emergency siren threshold</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: VIBRATION MONITORING                                      -->
+      <!-- ========================================================================= -->
+      <section id="view-vibration" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="zap" class="w-5 h-5 text-amber-400"></i>
+              SW-420 Seismic & Slope Vibration Monitoring
+            </h2>
+            <div class="text-xs text-slate-400">Piezoelectric spring switch embedded in bedrock anchor plate</div>
+          </div>
+
+          <div class="p-4 rounded bg-[#0a1120] border border-slate-800 font-mono text-xs space-y-2">
+            <div class="text-amber-400 font-bold">RECENT VIBRATION INTERRUPT TRAIN:</div>
+            <p class="text-slate-300">
+              6 micro-vibration pulses logged during the last 60-second window. Correlated with heavy rain and wet soil. No catastrophic continuous resonance detected yet.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: TEMPERATURE & HUMIDITY                                   -->
+      <!-- ========================================================================= -->
+      <section id="view-temp-humidity" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="thermometer" class="w-5 h-5 text-pink-400"></i>
+              DHT22 Precision Ambient Environmental Telemetry
+            </h2>
+            <div class="text-xs text-slate-400">Single-bus digital sensor with calibrated temperature and capacitive humidity</div>
+          </div>
+
+          <div class="p-4 rounded bg-[#0a1120] border border-slate-800 font-mono text-xs space-y-2">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Sensor Model:</span>
+              <span class="text-white">Aosong AM2302 / DHT22</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Sampling Resolution:</span>
+              <span class="text-white">0.1 °C / 0.1 % RH</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Checksum Validation:</span>
+              <span class="text-emerald-400 font-bold">100% Valid (0 CRC Errors)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: EARLY WARNING CENTER                                      -->
+      <!-- ========================================================================= -->
+      <section id="view-early-warning" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>
+              Command Operations: Early Warning Center
+            </h2>
+            <div class="text-xs text-slate-400">Threshold analysis matrix, protocol management, and threat escalation procedures</div>
+          </div>
+
+          <div class="p-4 rounded bg-amber-950/20 border border-amber-500/30 text-xs text-amber-200">
+            <div class="font-bold mb-1">PROTOTYPE MONITORING INDICATOR NOTICE</div>
+            <div>All alerts generated by this dashboard represent experimental prototype indicators derived from edge IoT sensors. Formal evacuation orders must be validated by District Disaster Management Authority (DDMA).</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: ALERT HISTORY                                            -->
+      <!-- ========================================================================= -->
+      <section id="view-alerts" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="bell" class="w-5 h-5 text-cyan-400"></i>
+              Complete Historical Alert Audit Log
+            </h2>
+            <div class="text-xs text-slate-400">Immutable chronological record of all early warning threshold trips</div>
+          </div>
+
+          <div class="p-4 rounded bg-[#0a1120] border border-slate-800 font-mono text-xs">
+            Review and export the primary table on the System Overview page for full search and filter capabilities.
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: ANALYTICS & REPORTS                                      -->
+      <!-- ========================================================================= -->
+      <section id="view-analytics" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="bar-chart-2" class="w-5 h-5 text-cyan-400"></i>
+              Disaster Risk Analytics & Periodic Reports
+            </h2>
+            <div class="text-xs text-slate-400">Long-term environmental trends and multi-station cross-correlation</div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="exportEventsCSV()" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition flex items-center gap-2">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+              Download Daily Hydrological Report (CSV)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- DEDICATED VIEW: SYSTEM CONFIGURATION                                     -->
+      <!-- ========================================================================= -->
+      <section id="view-config" class="dashboard-view hidden p-4 md:p-6 space-y-6 flex-1">
+        <div class="panel p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="sliders" class="w-5 h-5 text-cyan-400"></i>
+              ESP8266 Station Configuration & Calibration
+            </h2>
+            <div class="text-xs text-slate-400">Edge firmware parameters, telemetry intervals, and MQTT broker setup</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800 space-y-2">
+              <div class="font-bold text-white mb-2">MQTT Broker Settings</div>
+              <div class="flex justify-between"><span class="text-slate-400">Server:</span> <span>telemetry.disasterwatch.gov.in</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Port:</span> <span>8883 (MQTTS)</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Topic:</span> <span>stations/alpha07/telemetry</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">QoS:</span> <span>Level 1 (At least once)</span></div>
+            </div>
+
+            <div class="p-4 rounded bg-[#0a1120] border border-slate-800 space-y-2">
+              <div class="font-bold text-white mb-2">Hardware Calibration Offsets</div>
+              <div class="flex justify-between"><span class="text-slate-400">Water Zero Baseline:</span> <span>+12 ADC Counts</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Rain Debounce Window:</span> <span>1000 ms</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Soil Debounce Window:</span> <span>1000 ms</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">SW-420 Pulse Window:</span> <span>60 seconds</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="mt-auto border-t border-slate-800/80 bg-[#080d18] px-6 py-4 flex flex-col md:flex-row items-center justify-between text-xs font-mono text-slate-500 gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>DISASTER WATCH V2.8 • COMMAND OPERATIONS CENTER</span>
+        </div>
+        <div>
+          Hardware: ESP8266 NodeMCU 12-E • Node ID: ALPHA-07
+        </div>
+      </footer>
+
+    </div>
+
+  </div>
+
+  <!-- EMERGENCY PROTOCOL MODAL DIALOG -->
+  <div id="protocolModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#0f172a] border border-slate-700 rounded-lg max-w-lg w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 text-orange-400 font-bold font-mono text-sm">
+          <i data-lucide="radio" class="w-5 h-5"></i>
+          SIMULATED DISASTER PROTOCOL DISPATCH
+        </div>
+        <button onclick="closeModal('protocolModal')" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="text-xs text-slate-300 space-y-2">
+        <p>You are about to initiate an emergency notification sequence for <strong>Western Ghats Sector 4B</strong> based on current sensor triggers.</p>
+        <div class="p-3 rounded bg-slate-900 border border-slate-800 font-mono text-[11px] space-y-1">
+          <div>• Water Level Analog: <span class="text-cyan-400">495 ADC (Moderate Runoff)</span></div>
+          <div>• Rain Sensor: <span class="text-blue-400">DETECTED (Conductive Bridge)</span></div>
+          <div>• Soil Sensor: <span class="text-emerald-400">WET (Saturated)</span></div>
+          <div>• Vibration Sensor: <span class="text-amber-400">6 pulses/min</span></div>
+        </div>
+        <p class="text-[11px] text-amber-400 italic">
+          * This is a simulated frontend demonstration. No external cellular SMS or siren hardware will be activated.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+        <button onclick="closeModal('protocolModal')" class="px-3 py-1.5 rounded text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-300">
+          Cancel
+        </button>
+        <button onclick="alert('Simulation: Emergency Watchstander Broadcast Dispatched to Sector 4B Rapid Response Teams.'); closeModal('protocolModal');" class="px-3 py-1.5 rounded text-xs font-mono font-bold bg-orange-600 hover:bg-orange-500 text-white">
+          Confirm Dispatch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAVIGATION (Smartphones & Small Tablets) -->
+  <nav class="mobile-bottom-nav lg:hidden">
+    <a href="#overview" data-view="overview" class="mobile-nav-btn active">
+      <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+      <span>Overview</span>
+    </a>
+    <a href="#live-monitoring" data-view="live" class="mobile-nav-btn">
+      <i data-lucide="activity" class="w-4 h-4"></i>
+      <span>Live</span>
+    </a>
+    <a href="#early-warning" data-view="early-warning" class="mobile-nav-btn">
+      <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+      <span>Warnings</span>
+    </a>
+    <a href="#alerts" data-view="alerts" class="mobile-nav-btn">
+      <i data-lucide="bell" class="w-4 h-4"></i>
+      <span>Alerts</span>
+    </a>
+    <button onclick="toggleSidebarMobile()" class="mobile-nav-btn text-slate-400">
+      <i data-lucide="menu" class="w-4 h-4"></i>
+      <span>More</span>
+    </button>
+  </nav>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="js/mock-data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/telemetry-simulator.js"></script>
+  <script src="js/thingspeak-client.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
+
