@@ -2,8 +2,8 @@
  * ======================================================================================
  * DISASTER WATCH - NodeMCU ESP8266 (ESP-12E) Real-Time Early Warning Station
  * Hardware: NodeMCU 1.0 (ESP-12E Module)
- * Network: Wi-Fi SSID "SURESHKUMAR"
- * Cloud: ThingSpeak Channel 3561421 | Write API Key: JUYB83S6AJST0E9N
+ * Network: Wi-Fi SSID "DMS"
+ * Cloud: ThingSpeak Channel 3562012 | Write API Key: RNJ01GKMG3U3TSYL
  * 
  * Pin Configuration:
  *   - Water Sensor (Analog)         -> Pin A0 (ADC0)
@@ -20,13 +20,13 @@
 #include <DHT.h>
 
 // Wi-Fi Credentials
-const char* ssid     = "SURESHKUMAR";
-const char* password = "SURESHKUMAR";
+const char* ssid     = "DMS";
+const char* password = "Dms@123";
 
 // ThingSpeak Cloud Settings
 const char* host           = "api.thingspeak.com";
-const char* writeApiKey    = "JUYB83S6AJST0E9N";
-const unsigned long channelID = 3561421;
+const char* writeApiKey    = "RNJ01GKMG3U3TSYL";
+const unsigned long channelID = 3562012;
 
 // Exact Hardware Pin Mapping
 #define WATER_PIN      A0   // Analog 0-1023

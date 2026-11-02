@@ -22,12 +22,11 @@ A complete, working end-to-end IoT disaster monitoring and early warning system 
 
 ## 2. ThingSpeak Cloud Configuration
 
-- **Channel ID**: `3561421`
+- **Channel ID**: `3562012`
 - **Channel Name**: `Disaster Early Warning System details`
-- **Write API Key**: `JUYB83S6AJST0E9N`
-- **Read API Key**: `8GDSH97J4Z1R4HIX`
-- **Wi-Fi SSID**: `SURESHKUMAR`
-- **Wi-Fi Password**: `SURESHKUMAR`
+- **Write / Read API Key**: `RNJ01GKMG3U3TSYL`
+- **Wi-Fi SSID**: `DMS`
+- **Wi-Fi Password**: `Dms@123`
 
 ### Field Definitions
 - **Field 1**: Water Sensor Analog Reading (`0–1023`)
@@ -65,7 +64,7 @@ The complete source code is ready to open and upload in Arduino IDE:
 The web dashboard is live at **`http://localhost:3000`** (or open [`index.html`](file:///c:/Projects/disaster/index.html) in your browser).
 
 - **Real ThingSpeak Cloud Client (`js/thingspeak-client.js`)**:
-  - Continuously polls your ThingSpeak Channel `3561421` every 5 seconds using your Read Key `8GDSH97J4Z1R4HIX`.
+  - Continuously polls your ThingSpeak Channel `3562012` every 3 seconds using API Key `RNJ01GKMG3U3TSYL`.
   - Parses real values for Water (A0), Rain (D7), Soil (D6), Vibration (D5), Temperature, and Humidity.
   - Dynamically calculates the **Real Threat Level** (`NORMAL`, `ADVISORY`, `WATCH`, `WARNING`, `CRITICAL`) and **Environmental Risk Score (0-100)** from the live sensor data.
   - Automatically feeds all 6 historical analytics graphs with the live telemetry feed.
@@ -77,7 +76,7 @@ The web dashboard is live at **`http://localhost:3000`** (or open [`index.html`]
 ## 5. Verification & Testing
 
 1. Open **`http://localhost:3000`** in your browser.
-2. Note the green badge in the top bar: **`THINGSPEAK: ONLINE (Channel 3561421)`**.
+2. Note the green badge in the top bar: **`THINGSPEAK: ONLINE (Channel 3562012)`**.
 3. Upload the Arduino code to your NodeMCU using the Arduino IDE.
-4. Open the Arduino Serial Monitor at `115200 baud`. When the board connects to Wi-Fi `SURESHKUMAR`, it will output sensor readings every 2 seconds and push an update to ThingSpeak every 15 seconds.
+4. Open the Arduino Serial Monitor at `115200 baud`. When the board connects to Wi-Fi `DMS`, it will output sensor readings every 2 seconds and push an update to ThingSpeak every 15 seconds.
 5. Watch the dashboard update live with your actual hardware readings!

@@ -30,9 +30,9 @@ const SYSTEM_METADATA = {
     freeHeap: "28,440 B / 48 KB",
     flashSize: "4096 KB (Flash ID: 0x1640ef)",
     supplyVoltage: "3.28V (Regulated)",
-    wifiSsid: "SURESHKUMAR",
+    wifiSsid: "DMS",
     protocol: "ThingSpeak Cloud (REST API)",
-    channelId: "3561421",
+    channelId: "3562012",
     uptimeSeconds: 1607542 // ~18 days 14 hours
   },
   pins: [
