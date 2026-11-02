@@ -56,3 +56,4 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[DISASTER WATCH] Server running at http://localhost:${PORT}`);
 });
+
