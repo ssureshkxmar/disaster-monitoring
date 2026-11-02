@@ -3,7 +3,7 @@
  * DISASTER WATCH - ESP32 Real-Time Early Warning Station
  * Hardware: ESP32 Dev Module / NodeMCU-32S
  * Network: Wi-Fi SSID "DMS"
- * Cloud: ThingSpeak Channel 3562012 | Write API Key: RNJ01GKMG3U3TSYL
+ * Cloud: ThingSpeak Channel 3561421 | Write API Key: JUYB83S6AJST0E9N
  * 
  * ESP32 Pin Configuration:
  *   - Water Sensor (Analog)         -> GPIO 34 (ADC1_CH6, 10-bit mode: 0-1023)
@@ -18,14 +18,14 @@
 #include <HTTPClient.h>
 #include <DHT.h>
 
-// Wi-Fi Credentials
+// Wi-Fi Credentials (Change to your active Wi-Fi / Hotspot)
 const char* ssid     = "DMS";
 const char* password = "Dms@123";
 
 // ThingSpeak Cloud Settings
 const char* host           = "api.thingspeak.com";
-const char* writeApiKey    = "RNJ01GKMG3U3TSYL";
-const unsigned long channelID = 3562012;
+const char* writeApiKey    = "JUYB83S6AJST0E9N";
+const unsigned long channelID = 3561421;
 
 // ESP32 Hardware Pin Mapping
 #define WATER_PIN      34   // ADC1 Channel 6

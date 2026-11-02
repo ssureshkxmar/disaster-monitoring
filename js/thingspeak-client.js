@@ -2,8 +2,9 @@
  * DISASTER WATCH - 100% REAL THINGSPEAK CLOUD CLIENT
  * NO FAKE SIMULATION. NO RANDOM NOISE. NO FABRICATED VALUES.
  * 
- * Connects directly to ThingSpeak Channel 3562012:
- *   - Write/Read API Key: RNJ01GKMG3U3TSYL
+ * Connects directly to ThingSpeak Channel 3561421:
+ *   - Read API Key: 8GDSH97J4Z1R4HIX
+ *   - Write API Key: JUYB83S6AJST0E9N
  * 
  * Hardware Field Mapping:
  *   - Field 1: Water Sensor Analog (0-1023) [Pin A0]
@@ -16,9 +17,9 @@
 
 class ThingSpeakRealClient {
   constructor() {
-    this.channelId = '3562012';
-    this.readApiKey = 'RNJ01GKMG3U3TSYL';
-    this.writeApiKey = 'RNJ01GKMG3U3TSYL';
+    this.channelId = '3561421';
+    this.readApiKey = '8GDSH97J4Z1R4HIX';
+    this.writeApiKey = 'JUYB83S6AJST0E9N';
     this.baseUrl = 'https://api.thingspeak.com';
 
     this.pollIntervalMs = 3000; // Poll cloud every 3 seconds
@@ -33,7 +34,7 @@ class ThingSpeakRealClient {
   }
 
   init() {
-    console.log('[ThingSpeakRealClient] Starting real-time cloud listener for Channel 3562012...');
+    console.log('[ThingSpeakRealClient] Starting real-time cloud listener for Channel 3561421...');
     this.fetchRealFeeds();
     
     if (this.pollTimer) clearInterval(this.pollTimer);
