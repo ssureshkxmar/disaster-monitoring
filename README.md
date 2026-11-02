@@ -22,12 +22,19 @@ A complete, working end-to-end IoT disaster monitoring and early warning system 
 
 ## 2. ThingSpeak Cloud Configuration
 
-- **Channel ID**: `3562012`
-- **Channel Name**: `Disaster Early Warning System details`
-- **Write API Key**: `RNJ01GKMG3U3TSYL`
-- **Read API Key**: `NUTK70XMGKWXHEY2`
+The system is pre-configured with support for both active ThingSpeak channels:
+
+### Primary Active Channel (Active Hardware Data):
+- **Channel ID**: `3561421`
+- **Write API Key**: `JUYB83S6AJST0E9N`
+- **Read API Key**: `8GDSH97J4Z1R4HIX`
 - **Wi-Fi SSID**: `DMS` (or `SURESHKUMAR`)
 - **Wi-Fi Password**: `Dms@123` (or `SURESHKUMAR`)
+
+### Secondary Channel:
+- **Channel ID**: `3562012`
+- **Write API Key**: `RNJ01GKMG3U3TSYL`
+- **Read API Key**: `NUTK70XMGKWXHEY2`
 
 ### Field Definitions
 - **Field 1**: Water Sensor Analog Reading (`0–1023`)

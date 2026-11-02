@@ -23,9 +23,16 @@ const char* ssid     = "DMS";
 const char* password = "Dms@123";
 
 // ThingSpeak Cloud Settings
-const char* host           = "api.thingspeak.com";
-const char* writeApiKey    = "RNJ01GKMG3U3TSYL";
-const unsigned long channelID = 3562012;
+// Set to Channel 3561421 (Active) or 3562012 (Secondary)
+const char* host              = "api.thingspeak.com";
+
+// Active Station (Channel 3561421):
+const char* writeApiKey       = "JUYB83S6AJST0E9N"; 
+const unsigned long channelID = 3561421;
+
+// To switch to Channel 3562012, uncomment these:
+// const char* writeApiKey    = "RNJ01GKMG3U3TSYL";
+// const unsigned long channelID = 3562012;
 
 // ESP32 Hardware Pin Mapping
 #define WATER_PIN      34   // ADC1 Channel 6

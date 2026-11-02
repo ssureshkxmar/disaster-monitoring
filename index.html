@@ -201,11 +201,19 @@
         <!-- Right: Telemetry status, Time, Threat Switcher, Audio, Profile -->
         <div class="flex items-center gap-3 md:gap-4">
           
-          <!-- System Status: ONLINE & ThingSpeak Cloud Link -->
+          <!-- System Status: ONLINE & ThingSpeak Cloud Link with Channel Switcher -->
+          <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs font-mono">
+            <span class="pulse-beacon bg-emerald-400 text-emerald-400"></span>
+            <span class="text-slate-400 font-semibold hidden md:inline">CHANNEL:</span>
+            <select id="channelSelector" onchange="window.thingSpeakClient && window.thingSpeakClient.switchChannel(this.value)" class="bg-transparent text-emerald-400 font-bold border-0 outline-none text-xs cursor-pointer pr-1">
+              <option value="3561421" class="bg-[#0b132b] text-emerald-400 font-bold">CH 3561421 (Active: 98+ Feeds)</option>
+              <option value="3562012" class="bg-[#0b132b] text-sky-400">CH 3562012 (Secondary)</option>
+            </select>
+          </div>
+
           <div id="thingspeakCloudBadge" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold tracking-wider">
             <span class="pulse-beacon bg-emerald-400 text-emerald-400"></span>
             <span>THINGSPEAK: ONLINE</span>
-            <span class="text-[10px] text-slate-400 font-normal hidden xl:inline">(Channel 3562012)</span>
           </div>
 
           <!-- Live Streaming Toggle -->

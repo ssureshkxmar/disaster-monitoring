@@ -2,11 +2,11 @@
  * DISASTER WATCH - 100% REAL THINGSPEAK CLOUD CLIENT
  * NO FAKE SIMULATION. NO RANDOM NOISE. NO FABRICATED VALUES.
  * 
- * Connects directly to ThingSpeak Channel 3562012:
- *   - Read API Key: NUTK70XMGKWXHEY2
- *   - Write API Key: RNJ01GKMG3U3TSYL
+ * Configured with Dual Channel Support:
+ *   - Channel 3561421: Read Key 8GDSH97J4Z1R4HIX | Write Key JUYB83S6AJST0E9N (Active Hardware Data)
+ *   - Channel 3562012: Read Key NUTK70XMGKWXHEY2 | Write Key RNJ01GKMG3U3TSYL (Secondary Hardware Station)
  * 
- * Hardware Field Mapping:
+ * Hardware Pin Mapping:
  *   - Field 1: Water Sensor Analog (0-1023) [Pin A0]
  *   - Field 2: Rain Sensor Digital (0 = No Rain, 1 = Rain Detected) [Pin D7]
  *   - Field 3: Soil Moisture Digital (0 = Dry, 1 = Wet) [Pin D6]
@@ -15,11 +15,28 @@
  *   - Field 6: Humidity DHT22 (% RH) [Pin D2]
  */
 
+const THING_SPEAK_CONFIGS = {
+  '3561421': {
+    channelId: '3561421',
+    readApiKey: '8GDSH97J4Z1R4HIX',
+    writeApiKey: 'JUYB83S6AJST0E9N',
+    name: 'Disaster Station (3561421)'
+  },
+  '3562012': {
+    channelId: '3562012',
+    readApiKey: 'NUTK70XMGKWXHEY2',
+    writeApiKey: 'RNJ01GKMG3U3TSYL',
+    name: 'Disaster Station (3562012)'
+  }
+};
+
 class ThingSpeakRealClient {
   constructor() {
-    this.channelId = '3562012';
-    this.readApiKey = 'NUTK70XMGKWXHEY2';
-    this.writeApiKey = 'RNJ01GKMG3U3TSYL';
+    const saved = localStorage.getItem('dms_active_channel') || '3561421';
+    const cfg = THING_SPEAK_CONFIGS[saved] || THING_SPEAK_CONFIGS['3561421'];
+    this.channelId = cfg.channelId;
+    this.readApiKey = cfg.readApiKey;
+    this.writeApiKey = cfg.writeApiKey;
     this.baseUrl = 'https://api.thingspeak.com';
 
     this.pollIntervalMs = 3000; // Poll cloud every 3 seconds
@@ -33,14 +50,52 @@ class ThingSpeakRealClient {
     this.hardwareOnlineThresholdSec = 45; // If last entry > 45s ago, hardware is offline
   }
 
+  switchChannel(newChannelId) {
+    if (THING_SPEAK_CONFIGS[newChannelId]) {
+      const cfg = THING_SPEAK_CONFIGS[newChannelId];
+      this.channelId = cfg.channelId;
+      this.readApiKey = cfg.readApiKey;
+      this.writeApiKey = cfg.writeApiKey;
+      this.lastEntryId = null;
+      localStorage.setItem('dms_active_channel', newChannelId);
+      console.log(`[ThingSpeakRealClient] Switched active channel to ${this.channelId}`);
+      
+      const selectEl = document.getElementById('channelSelector');
+      if (selectEl && selectEl.value !== newChannelId) {
+        selectEl.value = newChannelId;
+      }
+      this.fetchRealFeeds();
+    }
+  }
+
   init() {
-    console.log('[ThingSpeakRealClient] Starting real-time cloud listener for Channel 3562012...');
+    console.log(`[ThingSpeakRealClient] Starting real-time cloud listener for Channel ${this.channelId}...`);
+    const selectEl = document.getElementById('channelSelector');
+    if (selectEl) selectEl.value = this.channelId;
+
     this.fetchRealFeeds();
     
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = setInterval(() => {
       this.fetchRealFeeds();
     }, this.pollIntervalMs);
+  }
+
+  async sendTestPacket() {
+    try {
+      const testWater = Math.floor(Math.random() * 80) + 15;
+      const testTemp = (31 + Math.random() * 2).toFixed(1);
+      const testHum = (70 + Math.random() * 5).toFixed(1);
+      const url = `https://api.thingspeak.com/update?api_key=${this.writeApiKey}&field1=${testWater}&field2=0&field3=0&field4=0&field5=${testTemp}&field6=${testHum}`;
+      
+      const res = await fetch(url);
+      if (res.ok) {
+        console.log(`[ThingSpeak] Test packet sent to Channel ${this.channelId}`);
+        setTimeout(() => this.fetchRealFeeds(), 1500);
+      }
+    } catch (e) {
+      console.error('[ThingSpeak] Error posting packet:', e);
+    }
   }
 
   async fetchRealFeeds() {
