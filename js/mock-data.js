@@ -32,7 +32,7 @@ const SYSTEM_METADATA = {
     supplyVoltage: "3.28V (Regulated)",
     wifiSsid: "DMS",
     protocol: "ThingSpeak Cloud (REST API)",
-    channelId: "3561421",
+    channelId: "3562012",
     uptimeSeconds: 1607542 // ~18 days 14 hours
   },
   pins: [

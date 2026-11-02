@@ -220,7 +220,7 @@ function renderEventsTable(events) {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" class="text-center py-8 text-slate-500 font-mono text-xs">
-          Connecting to ThingSpeak Channel 3561421... Waiting for real telemetry packets from ESP8266.
+          Connecting to ThingSpeak Channel 3562012... Waiting for real telemetry packets from ESP8266.
         </td>
       </tr>
     `;
